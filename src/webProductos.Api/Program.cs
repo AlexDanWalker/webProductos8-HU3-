@@ -11,11 +11,20 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar DbContext con MySQL
+// Leer la cadena de conexión desde variable de entorno primero, si no existe, usar appsettings
+var defaultConnection = Environment.GetEnvironmentVariable("DefaultConnection") 
+                        ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Configurar DbContext con MySQL y reintentos automáticos
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 36))
+        defaultConnection,
+        new MySqlServerVersion(new Version(8, 0, 36)),
+        mysqlOptions => mysqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(10),
+            errorNumbersToAdd: null
+        )
     )
 );
 
