@@ -3,7 +3,6 @@ using webProductos.Domain.Entities;
 using webProductos.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace webProductos.Infrastructure.Repositories
 {
     public class UserRepository : IUserRepository
@@ -39,22 +38,31 @@ namespace webProductos.Infrastructure.Repositories
             return user;
         }
 
-        public async Task<bool> DeleteAsync(User user)
+        public async Task<bool> DeleteAsync(int id)
         {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return false;
+
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
             return true;
         }
-
-        public async Task<User?> GetByUsernameAsync(string username)
+        
+        public async Task<User?> GetByEmailAsync(string email)
         {
             return await _context.Users.Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Username == username);
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+        
+        public async Task<User?> GetByUsernameAsync(string username)
+        {
+            return await _context.Users.Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Username == username);
         }
     }
 }

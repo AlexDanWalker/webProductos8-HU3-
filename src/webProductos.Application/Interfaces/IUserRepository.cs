@@ -8,8 +8,8 @@ namespace webProductos.Application.Interfaces
         Task<User?> GetByIdAsync(int id);
         Task<User> AddAsync(User user);
         Task<User> UpdateAsync(User user);
-        Task<bool> DeleteAsync(User user);
-        Task<User?> GetByUsernameAsync(string username); // útil para login
+        Task<bool> DeleteAsync(int id);
+        Task<User?> GetByEmailAsync(string email); // útil para login
         Task SaveChangesAsync();
     }
 }
