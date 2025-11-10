@@ -1,27 +1,30 @@
 services:
-  mysql:
+  api:
+    build: .
+    ports:
+      - "8080:8080"  # exponer el mismo puerto que escucha la API
+    depends_on:
+      - db
+    environment:
+      MYSQLHOST: db
+      MYSQLPORT: 3306
+      MYSQLDATABASE: webproductosdb
+      MYSQLUSER: root
+      MYSQLPASSWORD: Qwe.123*
+      Jwt__Key: "TuClaveMuySeguraDeAlMenos32Caracteres"  # según tu appsettings.json
+
+  db:
     image: mysql:8.0
-    container_name: webproductos-mysql
     environment:
       MYSQL_ROOT_PASSWORD: Qwe.123*
       MYSQL_DATABASE: webproductosdb
+      MYSQL_USER: root
+      MYSQL_PASSWORD: Qwe.123*
     ports:
       - "3306:3306"
+    restart: always
     volumes:
       - db_data:/var/lib/mysql
-
-  api:
-    build: .
-    container_name: webproductos-api
-    depends_on:
-      - mysql
-    environment:
-      # Forzar entorno de desarrollo para que Swagger se active
-      - ASPNETCORE_ENVIRONMENT=Development
-      # Cadena de conexión
-      - DefaultConnection=Server=mysql;Database=webproductosdb;User=root;Password=Qwe.123*;
-    ports:
-      - "5075:8080"
 
 volumes:
   db_data:

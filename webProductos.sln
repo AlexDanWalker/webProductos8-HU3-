@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B17F9D02-50BF-4878-87C5-04C67EB6ED6F}"
+	ProjectSection(SolutionItems) = preProject
+		src\.env = src\.env
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "webProductos.Api", "src\webProductos.Api\webProductos.Api.csproj", "{03D972BA-0D54-44E5-B12D-5A99E437A076}"
 EndProject

@@ -11,9 +11,27 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Leer la cadena de conexión desde variable de entorno primero, si no existe, usar appsettings
-var defaultConnection = Environment.GetEnvironmentVariable("DefaultConnection") 
-                        ?? builder.Configuration.GetConnectionString("DefaultConnection");
+// Obtener cadena de conexión de Railway si existe, sino usar appsettings.json
+var envHost = Environment.GetEnvironmentVariable("MYSQLHOST");
+var envPort = Environment.GetEnvironmentVariable("MYSQLPORT");
+var envDatabase = Environment.GetEnvironmentVariable("MYSQLDATABASE");
+var envUser = Environment.GetEnvironmentVariable("MYSQLUSER");
+var envPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+
+string defaultConnection;
+
+if (!string.IsNullOrEmpty(envHost) &&
+    !string.IsNullOrEmpty(envPort) &&
+    !string.IsNullOrEmpty(envDatabase) &&
+    !string.IsNullOrEmpty(envUser) &&
+    !string.IsNullOrEmpty(envPassword))
+{
+    defaultConnection = $"Server={envHost};Port={envPort};Database={envDatabase};User={envUser};Password={envPassword};";
+}
+else
+{
+    defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+}
 
 // Configurar DbContext con MySQL y reintentos automáticos
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -94,13 +112,18 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
-// Middleware
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "webProductos API v1"));
-}
+// Escuchar en todas las interfaces (para Docker/Railway)
+app.Urls.Add("http://0.0.0.0:8080");
 
+// --- Swagger disponible siempre, incluso en Production ---
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "webProductos API v1");
+    c.RoutePrefix = string.Empty; // swagger accesible en http://localhost:8080/
+});
+
+// Middleware
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
