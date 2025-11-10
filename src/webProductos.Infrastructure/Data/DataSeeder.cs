@@ -18,7 +18,7 @@ namespace webProductos.Infrastructure.Data
             {
                 new Role { Name = "Admin" },
                 new Role { Name = "Seller" },
-                new Role { Name = "Customer" }
+                new Role { Name = "User" }
             };
 
             await context.Roles.AddRangeAsync(roles);
@@ -46,7 +46,7 @@ namespace webProductos.Infrastructure.Data
                     Username = "customerUser",
                     Email = "customer@example.com",
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword("customer123"),
-                    RoleId = roles.First(r => r.Name == "Customer").Id
+                    RoleId = roles.First(r => r.Name == "User").Id
                 }
             };
 
@@ -56,10 +56,10 @@ namespace webProductos.Infrastructure.Data
             //  Productos de prueba
             var products = new List<Product>
             {
-                new Product { Name = "Laptop Gamer", Description = "Laptop de alto rendimiento", Price = 4999.99m, UserId = users[1].Id },
-                new Product { Name = "Mouse RGB", Description = "Mouse ergonómico con luces LED", Price = 59.99m, UserId = users[1].Id },
-                new Product { Name = "Teclado Mecánico", Description = "Teclado con switches azules", Price = 120.00m, UserId = users[1].Id },
-                new Product { Name = "Auriculares Inalámbricos", Description = "Bluetooth con cancelación de ruido", Price = 199.99m, UserId = users[2].Id }
+                new Product { Name = "Laptop Gamer", Description = "Laptop de alto rendimiento", Price = 4999.99m, Stock = 4, UserId = users[1].Id },
+                new Product { Name = "Mouse RGB", Description = "Mouse ergonómico con luces LED", Price = 59.99m, Stock = 5, UserId = users[1].Id },
+                new Product { Name = "Teclado Mecánico", Description = "Teclado con switches azules", Price = 120.00m, Stock = 7, UserId = users[1].Id },
+                new Product { Name = "Auriculares Inalámbricos", Description = "Bluetooth con cancelación de ruido", Price = 199.99m, Stock = 3, UserId = users[2].Id }
             };
 
             await context.Products.AddRangeAsync(products);
