@@ -8,7 +8,7 @@ namespace webProductos.Application.Interfaces
         Task<Product?> GetByIdAsync(int id);
         Task<Product> AddAsync(Product product);
         Task<Product> UpdateAsync(Product product);
-        Task<bool> DeleteAsync(Product product);
+        Task<bool> DeleteAsync(int id);
         Task SaveChangesAsync();
     }
 }

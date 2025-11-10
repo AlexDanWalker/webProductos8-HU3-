@@ -8,9 +8,14 @@ namespace webProductos.Application.Profiles
     {
         public UserProfile()
         {
-            CreateMap<User, UserDto>()
-                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
-            CreateMap<RegisterUserDto, User>();
+            // Mapear User -> UserDto sin RoleName ni CreatedAt
+            CreateMap<User, UserDto>();
+            CreateMap<User, AuthResponseDto>();
+
+            // Mapear RegisterUserDto -> User
+            CreateMap<RegisterUserDto, User>()
+                .ForMember(dest => dest.PasswordHash, opt => opt.MapFrom(src => BCrypt.Net.BCrypt.HashPassword(src.Password)))
+                .ForMember(dest => dest.RoleId, opt => opt.Ignore()); // RoleId se asigna en el servicio
         }
     }
 }
