@@ -14,5 +14,8 @@ namespace webProductos.Domain.Entities
 
         // Relación con Product (1:N)
         public ICollection<Product> Products { get; set; } = new List<Product>();
+
+        // 🔹 Relación con RefreshToken (1:N)
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }

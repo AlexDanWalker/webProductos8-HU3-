@@ -1,4 +1,6 @@
 using webProductos.Application.DTOs.User;
+using webProductos.Application.DTOs.Token;
+using webProductos.Domain.Entities;
 
 namespace webProductos.Application.Interfaces
 {
@@ -16,9 +18,13 @@ namespace webProductos.Application.Interfaces
 
         // Eliminar usuario
         Task<bool> DeleteAsync(int id);
-        
 
         // Login
         Task<AuthResponseDto?> AuthenticateAsync(LoginUserDto loginDto);
+
+        // 🔐 Refresh Token
+        Task<string> GenerateRefreshTokenAsync(int userId, string ipAddress);
+        Task<User?> GetUserByRefreshTokenAsync(string token);
+        Task RevokeRefreshTokenAsync(string token, string ipAddress);
     }
 }

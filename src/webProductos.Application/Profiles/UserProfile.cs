@@ -1,5 +1,6 @@
 using AutoMapper;
 using webProductos.Application.DTOs.User;
+using webProductos.Application.DTOs.Token;
 using webProductos.Domain.Entities;
 
 namespace webProductos.Application.Profiles

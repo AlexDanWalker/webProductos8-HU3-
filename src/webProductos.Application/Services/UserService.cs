@@ -1,18 +1,22 @@
 using webProductos.Application.DTOs.User;
+using webProductos.Application.DTOs.Token;
 using webProductos.Application.Interfaces;
 using webProductos.Domain.Entities;
 using AutoMapper;
+using System.Security.Cryptography;
 
 namespace webProductos.Application.Services
 {
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IMapper _mapper;
 
-        public UserService(IUserRepository userRepository, IMapper mapper)
+        public UserService(IUserRepository userRepository, IRefreshTokenRepository refreshTokenRepository, IMapper mapper)
         {
             _userRepository = userRepository;
+            _refreshTokenRepository = refreshTokenRepository;
             _mapper = mapper;
         }
 
@@ -35,7 +39,7 @@ namespace webProductos.Application.Services
                 Username = registerDto.Username,
                 Email = registerDto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-                RoleId = 3 // default role User
+                RoleId = 3
             };
 
             var createdUser = await _userRepository.AddAsync(user);
@@ -45,7 +49,6 @@ namespace webProductos.Application.Services
 
         public async Task<AuthResponseDto?> AuthenticateAsync(LoginUserDto loginDto)
         {
-            // CAMBIO: usamos GetByEmailAsync
             var user = await _userRepository.GetByEmailAsync(loginDto.Email);
             if (user == null) return null;
 
@@ -71,6 +74,45 @@ namespace webProductos.Application.Services
             var result = await _userRepository.DeleteAsync(id);
             await _userRepository.SaveChangesAsync();
             return result;
+        }
+
+        public async Task<string> GenerateRefreshTokenAsync(int userId, string ipAddress)
+        {
+            var randomBytes = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+            var refreshToken = Convert.ToBase64String(randomBytes);
+
+            var tokenEntity = new RefreshToken
+            {
+                Token = refreshToken,
+                Expires = DateTime.UtcNow.AddDays(7),
+                Created = DateTime.UtcNow,
+                CreatedByIp = ipAddress,
+                UserId = userId
+            };
+
+            await _refreshTokenRepository.AddAsync(tokenEntity);
+            await _refreshTokenRepository.SaveChangesAsync();
+
+            return refreshToken;
+        }
+
+        public async Task<User?> GetUserByRefreshTokenAsync(string token)
+        {
+            var rt = await _refreshTokenRepository.GetByTokenAsync(token);
+            if (rt == null || rt.User == null || !rt.IsActive) return null;
+            return rt.User;
+        }
+
+        public async Task RevokeRefreshTokenAsync(string token, string ipAddress)
+        {
+            var rt = await _refreshTokenRepository.GetByTokenAsync(token);
+            if (rt == null) return;
+
+            rt.Revoked = DateTime.UtcNow;
+            rt.RevokedByIp = ipAddress;
+            await _refreshTokenRepository.SaveChangesAsync();
         }
     }
 }

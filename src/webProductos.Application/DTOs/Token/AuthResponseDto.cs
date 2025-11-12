@@ -1,4 +1,4 @@
-namespace webProductos.Application.DTOs.User
+namespace webProductos.Application.DTOs.Token
 {
     public class AuthResponseDto
     {
