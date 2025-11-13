@@ -34,16 +34,30 @@ namespace webProductos.Application.Services
 
         public async Task<UserDto> RegisterAsync(RegisterUserDto registerDto)
         {
+            // Validar si el correo ya está registrado
+            var existingUser = await _userRepository.GetByEmailAsync(registerDto.Email);
+            if (existingUser != null)
+                throw new Exception("El correo ya está registrado.");
+
+            // Obtener el rol solicitado (o Customer por defecto)
+            var roleName = string.IsNullOrEmpty(registerDto.RoleName) ? "Customer" : registerDto.RoleName;
+            var role = await _userRepository.GetRoleByNameAsync(roleName);
+
+            if (role == null)
+                throw new Exception($"El rol '{roleName}' no existe.");
+
+            // Crear nuevo usuario
             var user = new User
             {
                 Username = registerDto.Username,
                 Email = registerDto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-                RoleId = 3
+                RoleId = role.Id
             };
 
             var createdUser = await _userRepository.AddAsync(user);
             await _userRepository.SaveChangesAsync();
+
             return _mapper.Map<UserDto>(createdUser);
         }
 

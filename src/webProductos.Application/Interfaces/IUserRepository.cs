@@ -11,5 +11,6 @@ namespace webProductos.Application.Interfaces
         Task<bool> DeleteAsync(int id);
         Task<User?> GetByEmailAsync(string email); // útil para login
         Task SaveChangesAsync();
+        Task<Role?> GetRoleByNameAsync(string roleName);
     }
 }

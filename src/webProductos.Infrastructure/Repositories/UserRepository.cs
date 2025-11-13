@@ -47,22 +47,30 @@ namespace webProductos.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
-        
+
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Users.Include(u => u.Role)
+            return await _context.Users
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == email);
+        }
+
+        public async Task<User?> GetByUsernameAsync(string username)
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Username == username);
         }
 
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
         }
-        
-        public async Task<User?> GetByUsernameAsync(string username)
+
+        // Nuevo método para buscar un rol por nombre
+        public async Task<Role?> GetRoleByNameAsync(string roleName)
         {
-            return await _context.Users.Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Username == username);
+            return await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
         }
     }
 }

@@ -21,7 +21,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Puerto expuesto
-EXPOSE 5075
+EXPOSE 8080
 
 # Comando para ejecutar la API
 ENTRYPOINT ["dotnet", "webProductos.Api.dll"]

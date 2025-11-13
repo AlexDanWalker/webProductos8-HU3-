@@ -11,14 +11,17 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Obtener cadena de conexión de Railway si existe, sino usar appsettings.json
+// Configuración de la cadena de conexión
+
+// Obtener variables de entorno (Render / Aiven)
 var envHost = Environment.GetEnvironmentVariable("MYSQLHOST");
 var envPort = Environment.GetEnvironmentVariable("MYSQLPORT");
 var envDatabase = Environment.GetEnvironmentVariable("MYSQLDATABASE");
 var envUser = Environment.GetEnvironmentVariable("MYSQLUSER");
 var envPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
 
-string defaultConnection;
+// Decidir qué conexión usar: Aiven (Render) o local
+string connectionString;
 
 if (!string.IsNullOrEmpty(envHost) &&
     !string.IsNullOrEmpty(envPort) &&
@@ -26,27 +29,34 @@ if (!string.IsNullOrEmpty(envHost) &&
     !string.IsNullOrEmpty(envUser) &&
     !string.IsNullOrEmpty(envPassword))
 {
-    defaultConnection = $"Server={envHost};Port={envPort};Database={envDatabase};User={envUser};Password={envPassword};";
+    // Conexión Aiven con SSL requerido
+    connectionString = $"Server={envHost};Port={envPort};Database={envDatabase};User={envUser};Password={envPassword};SslMode=Required;";
 }
 else
 {
-    defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+    // Conexión local para desarrollo
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 }
 
-// Configurar DbContext con MySQL y reintentos automáticos
+// Registrar DbContext con reintentos automáticos
 builder.Services.AddDbContext<AppDbContext>(options =>
+{
     options.UseMySql(
-        defaultConnection,
-        new MySqlServerVersion(new Version(8, 0, 36)),
-        mysqlOptions => mysqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorNumbersToAdd: null
-        )
-    )
-);
+        connectionString,
+        ServerVersion.AutoDetect(connectionString), // detecta versión automáticamente
+        mySqlOptions =>
+        {
+            mySqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            );
+        }
+    );
+});
 
 // Registrar AutoMapper
+
 builder.Services.AddAutoMapper(typeof(ProductProfile).Assembly, typeof(UserProfile).Assembly);
 
 // Registrar servicios y repositorios
@@ -54,16 +64,16 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>(); // ✅ agregado
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
+// Configurar controladores y Swagger
 builder.Services.AddControllers();
-
-// Configurar Swagger con JWT
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "webProductos API", Version = "v1" });
 
+    // JWT en Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header usando el esquema Bearer. Ejemplo: \"Authorization: Bearer {token}\"",
@@ -111,20 +121,20 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Construir la app
 var app = builder.Build();
 
-// Escuchar en todas las interfaces (para Docker/Railway)
+// Escuchar en todas las interfaces (Docker / Render)
 app.Urls.Add("http://0.0.0.0:8080");
 
-// --- Swagger disponible siempre, incluso en Production ---
+// Middleware
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "webProductos API v1");
-    c.RoutePrefix = string.Empty; // swagger accesible en http://localhost:8080/
+    c.RoutePrefix = string.Empty; // Swagger en la raíz
 });
 
-// Middleware
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -138,5 +148,5 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<AppDbContext>();
     await DataSeeder.SeedAsync(context);
 }
-
+// Arrancar la app
 app.Run();

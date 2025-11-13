@@ -1,25 +1,25 @@
 services:
   api:
     build: .
+    container_name: webproductos_api 
     ports:
-      - "8081:8080"  # exponer el mismo puerto que escucha la API
+      - "8081:8080"  
     depends_on:
       - db
     environment:
-      MYSQLHOST: db   # antes estaba localhost, cambié a 'db' para que se conecte al contenedor
+      MYSQLHOST: db
       MYSQLPORT: 3306
       MYSQLDATABASE: webproductosdb
       MYSQLUSER: root
       MYSQLPASSWORD: Qwe.123*
-      Jwt__Key: "TuClaveMuySeguraDeAlMenos32Caracteres"  # según tu appsettings.json
+      Jwt__Key: "TuClaveMuySeguraDeAlMenos32Caracteres"
 
   db:
     image: mysql:8.0
+    container_name: webproductos_db
     environment:
       MYSQL_ROOT_PASSWORD: Qwe.123*
       MYSQL_DATABASE: webproductosdb
-      # MYSQL_USER: root    #  eliminado porque no se puede usar 'root' como usuario regular
-      # MYSQL_PASSWORD: Qwe.123*  #  eliminado por la misma razón
     ports:
       - "3308:3306"
     restart: always
