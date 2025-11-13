@@ -19,14 +19,17 @@ Env.Load();
 string connectionString;
 
 //  Variables para local / Docker
-var envHost = Environment.GetEnvironmentVariable("MYSQLHOST");
-var envPort = Environment.GetEnvironmentVariable("MYSQLPORT");
-var envDatabase = Environment.GetEnvironmentVariable("MYSQLDATABASE");
-var envUser = Environment.GetEnvironmentVariable("MYSQLUSER");
-var envPassword = Environment.GetEnvironmentVariable("MYSQLPASSWORD");
+var envHost = Environment.GetEnvironmentVariable("MYSQL_HOST");
+var envPort = Environment.GetEnvironmentVariable("MYSQL_PORT");
+var envDatabase = Environment.GetEnvironmentVariable("MYSQL_DATABASE");
+var envUser = Environment.GetEnvironmentVariable("MYSQL_USER");
+var envPassword = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
 
 //  Variables Aiven
 var aivenConnection = Environment.GetEnvironmentVariable("AIVEN_CONNECTION");
+
+//  Definir sslMode según Aiven o local
+string sslMode = !string.IsNullOrEmpty(aivenConnection) ? "Required" : "Preferred";
 
 if (!string.IsNullOrEmpty(aivenConnection))
 {
@@ -39,8 +42,8 @@ else if (!string.IsNullOrEmpty(envHost) &&
          !string.IsNullOrEmpty(envUser) &&
          !string.IsNullOrEmpty(envPassword))
 {
-    // Conexión Docker/local con retry SSL opcional
-    connectionString = $"Server={envHost};Port={envPort};Database={envDatabase};User={envUser};Password={envPassword};SslMode=Preferred;";
+    // Conexión Docker/local con SSL definido dinámicamente
+    connectionString = $"Server={envHost};Port={envPort};Database={envDatabase};User={envUser};Password={envPassword};SslMode={sslMode};";
 }
 else
 {
